@@ -1,5 +1,8 @@
 class AddOrganization{
-
+    
+    get myOrganizationsTitle() {
+        return cy.get("header").find("span").first();
+      }
     get addNewOrg(){
         return cy.get(".vs-c-my-organization-item-wrapper");
     };

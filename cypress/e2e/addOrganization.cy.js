@@ -6,10 +6,23 @@ import { faker } from "@faker-js/faker";
 
 describe("create organization test", () => {
     before("login to the app", () => {
+        cy.intercept({
+            method: "GET",
+            url: "https://cypress-api.vivifyscrum-stage.com/api/v2/my-organizations",
+        }).as("getMyOrganizations");
         cy.visit("/login")
         loginPage.login(Cypress.env("validEmail"), Cypress.env("validPass"));
-        cy.url().should("contain","/login");
-        cy.url().should("include", "my-organizations");
+        cy.url().should("include", "/my-organizations")
+        //cy.visit("/my-organization");
+        cy.wait("@getMyOrganizations").then((interception) => {
+            expect(interception.response.statusCode).eq(200);
+            expect(window.localStorage.getItem("token")).to.exist;
+          });
+      
+          cy.url().should("include", "my-organizations");
+         addOrganization.myOrganizationsTitle
+            .should("be.visible")
+            .and("have.text", "My Organizations");
     })
 
         it("create new organization with valid data", () => {
@@ -17,11 +30,6 @@ describe("create organization test", () => {
                 method: "POST",
                 url: "https://cypress-api.vivifyscrum-stage.com/api/v2/organizations",
             }).as("createOrg");
-
-            cy.intercept({
-                method:"GET",
-                url: "https://cypress-api.vivifyscrum-stage.com/api/v2/my-organizations"
-            }).as("getOrg")
             
             let orgId;
             let orgRandomName = faker.company.name();
@@ -34,12 +42,6 @@ describe("create organization test", () => {
             cy.visit("/my-organizations")
             cy.url()
               .should("include", "/my-organizations")
-              .and("not.include",`${orgId}/boards`)
-            cy.wait("@getOrg").then((interception) => {
-                orgId = interception.response.body.id;
-                expect(interception.response.statusCode).eq(200);
-                
-            })  
-
-        })
+              .and("not.include",`${orgId}/boards`);
+        });
 })

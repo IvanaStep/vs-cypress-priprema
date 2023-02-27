@@ -17,13 +17,22 @@ describe("login test",() => {
             method: "POST",
             url: "https://cypress-api.vivifyscrum-stage.com/api/v2/login",
         }).as("successfulLogin");
-        
+
+        cy.intercept({
+            method: "GET",
+            url: "https://cypress-api.vivifyscrum-stage.com/api/v2/my-organizations"
+        }).as("getMyOrganizations");
+
         loginPage.login(Cypress.env("validEmail"),Cypress.env("validPass"));
+        loginPage.loginHeading.should("not.exist");
 
         cy.wait("@successfulLogin").then((interception) => {
             expect(interception.response.statusCode).eq(200)
-        
         });
-        cy.url().should("contain","/login")
+        cy.wait("@getMyOrganizations").then((interception) => {
+            expect(interception.response.statusCode).eq(200);
+        });
+        
+        cy.url().should("include","/my-organizations")
     });
 })
